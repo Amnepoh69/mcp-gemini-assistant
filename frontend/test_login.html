@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Login Flow</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .step { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .credentials { background-color: #f0f8ff; padding: 10px; border-radius: 5px; }
+        .button { display: inline-block; padding: 10px 20px; margin: 10px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+        .button:hover { background-color: #0056b3; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>CFO/CTO Helper - Login Test</h1>
+    
+    <div class="step">
+        <h2>Step 1: Clear Authentication Data</h2>
+        <p>First, clear all stored authentication data:</p>
+        <a href="http://localhost:3000/clear-auth" class="button">Clear Auth Data</a>
+    </div>
+    
+    <div class="step">
+        <h2>Step 2: Test Login</h2>
+        <p>Use these credentials to test the login flow:</p>
+        <div class="credentials">
+            <strong>Email:</strong> test@example.com<br>
+            <strong>Password:</strong> TestPassword123!<br>
+            <br>
+            <em>Password Requirements:</em>
+            <ul>
+                <li>✓ At least 8 characters</li>
+                <li>✓ One uppercase letter (T)</li>
+                <li>✓ One lowercase letter (est)</li>
+                <li>✓ One number (123)</li>
+                <li>✓ One special character (!)</li>
+            </ul>
+        </div>
+        <a href="http://localhost:3000/" class="button">Go to Login</a>
+    </div>
+    
+    <div class="step">
+        <h2>Step 3: Access Dashboard</h2>
+        <p>After successful login, you should be redirected to the dashboard:</p>
+        <a href="http://localhost:3000/dashboard" class="button">Direct Dashboard Access</a>
+    </div>
+    
+    <div class="step">
+        <h2>Step 4: Test Other Pages</h2>
+        <p>Test other protected pages:</p>
+        <a href="http://localhost:3000/scenarios" class="button">Scenarios</a>
+        <a href="http://localhost:3000/upload" class="button">Upload</a>
+        <a href="http://localhost:3000/settings" class="button">Settings</a>
+    </div>
+    
+    <div class="step">
+        <h2>Backend Status</h2>
+        <p>Check if backend is running:</p>
+        <a href="http://localhost:8001/health" class="button">Backend Health</a>
+        <a href="http://localhost:8001/docs" class="button">API Documentation</a>
+    </div>
+    
+    <div class="step">
+        <h2>Test Results</h2>
+        <div id="results">
+            <p>Click the buttons above to test the authentication flow.</p>
+        </div>
+    </div>
+    
+    <script>
+        // Simple test status tracking
+        window.addEventListener('load', function() {
+            // Check if we can access localStorage
+            try {
+                const authData = localStorage.getItem('auth-storage');
+                const userData = localStorage.getItem('user_data');
+                
+                let status = '<h3>Current Auth Status:</h3>';
+                
+                if (authData || userData) {
+                    status += '<p class="error">⚠️ Authentication data found in localStorage. Click "Clear Auth Data" first.</p>';
+                } else {
+                    status += '<p class="success">✅ No authentication data found. Ready for testing.</p>';
+                }
+                
+                document.getElementById('results').innerHTML = status;
+            } catch (e) {
+                document.getElementById('results').innerHTML = '<p class="error">❌ Error checking localStorage: ' + e.message + '</p>';
+            }
+        });
+    </script>
+</body>
+</html>

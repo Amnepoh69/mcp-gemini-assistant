@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Auth State</title>
+    <script src="https://cdn.jsdelivr.net/npm/js-cookie@3.0.5/dist/js.cookie.min.js"></script>
+</head>
+<body>
+    <h1>Authentication State Test</h1>
+    <div id="results"></div>
+
+    <script>
+        function checkAuthState() {
+            const resultsDiv = document.getElementById('results');
+            
+            // Check localStorage
+            const userData = localStorage.getItem('user_data');
+            const authStorage = localStorage.getItem('auth-storage');
+            
+            // Check cookies
+            const accessToken = Cookies.get('access_token');
+            const refreshToken = Cookies.get('refresh_token');
+            
+            let html = '<h2>Current Auth State:</h2>';
+            html += '<h3>LocalStorage:</h3>';
+            html += `<p>user_data: ${userData || 'Not found'}</p>`;
+            html += `<p>auth-storage: ${authStorage || 'Not found'}</p>`;
+            
+            html += '<h3>Cookies:</h3>';
+            html += `<p>access_token: ${accessToken || 'Not found'}</p>`;
+            html += `<p>refresh_token: ${refreshToken || 'Not found'}</p>`;
+            
+            if (userData || authStorage || accessToken || refreshToken) {
+                html += '<h3>Action:</h3>';
+                html += '<button onclick="clearAuth()">Clear All Auth Data</button>';
+            } else {
+                html += '<p style="color: green;"><strong>✅ No auth data found - user should see login screen</strong></p>';
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        function clearAuth() {
+            localStorage.clear();
+            sessionStorage.clear();
+            Cookies.remove('access_token');
+            Cookies.remove('refresh_token');
+            alert('All auth data cleared!');
+            checkAuthState();
+        }
+        
+        // Check on page load
+        checkAuthState();
+    </script>
+</body>
+</html>

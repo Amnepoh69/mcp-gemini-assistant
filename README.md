@@ -1,214 +1,263 @@
-# Gemini Coding Assistant MCP Server
+# CFO/CTO Helper MVP - Authentication Implementation
 
-A powerful MCP server that allows Claude Code to consult Gemini for complex coding problems with full code context and conversation persistence.
+A comprehensive authentication system for the CFO/CTO Helper MVP platform, supporting both email/password and SSO authentication with Google and LinkedIn.
 
-> **Note**: This server works standalone but is highly recommended to use with the [Claude Code Development Kit](https://github.com/peterkrueck/Claude-Code-Development-Kit) for enhanced automation and context management.
+## Project Structure
 
-## Key Features
-
-- **Session Management**: Maintain conversation context across multiple queries
-- **File Attachments**: Read and include actual code files in conversations
-- **Hybrid Context**: Combine text-based `code_context` with file attachments
-- **Follow-up Questions**: Ask follow-up questions without resending code context
-- **Context Caching**: Code context and file content are cached per session
-- **Automatic Processing**: Files are processed and formatted automatically
-- **Multiple Sessions**: Run multiple parallel conversations for different problems
-- **Session Expiry**: Automatic cleanup of inactive sessions after 1 hour
-- **Latest Model**: Uses Gemini 2.5 Pro (stable) by default
-
-## Integration with Claude Code Development Kit
-
-While this MCP server works standalone, it is **highly recommended and optimized** to use with the [Claude Code Development Kit](https://github.com/peterkrueck/Claude-Code-Development-Kit).
-
-### Enhanced Features with Development Kit
-
-The Development Kit transforms Claude Code into an orchestrated development environment that seamlessly integrates with this Gemini MCP server:
-
-1. **Automated Context Injection**: The `gemini-context-injector.sh` hook automatically attaches project-specific context files (MCP-ASSISTANT-RULES.md, project-structure.md) to new Gemini sessions
-2. **Multi-Agent Orchestration**: Complex commands spawn specialized agents that can consult Gemini for architectural decisions and design patterns
-3. **Enhanced System Prompt**: The MCP server's system prompt is designed to work with the Development Kit's context injection system
-4. **Security Scanning**: The `mcp-security-scan.sh` hook prevents sensitive data from being sent to external AI services
-5. **Seamless Integration**: Commands like `/full-context` automatically leverage Gemini for complex problems
-
-### Quick Setup with Development Kit
-
-1. Install the [Claude Code Development Kit](https://github.com/peterkrueck/Claude-Code-Development-Kit)
-2. Configure this MCP server as described in the installation section below
-3. The Development Kit's hooks will automatically enhance your Gemini interactions
-
-## Purpose
-
-When Claude Code encounters difficult problems or needs a second opinion, it can:
-- Send complete code files by reading them from the local filesystem
-- Include text-based code context alongside file attachments
-- Have multi-turn conversations about the same problem
-- Get different perspectives without repeating context
-- Work on multiple problems in parallel sessions
-- Process files locally and include content in conversations
-
-## Installation
-
-1. Clone this repository
-2. Create a Python virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-3. Install dependencies:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. Copy `.env.example` to `.env` and add your Gemini API key:
-   ```bash
-   cp .env.example .env
-   # Edit .env file and set your GEMINI_API_KEY
-   ```
-5. Add to Claude Code:
-   ```bash
-   claude mcp add gemini-coding -s user -- /path/to/gemini-mcp/start_server.sh
-   ```
-   Replace `/path/to/gemini-mcp/` with the actual path to this directory.
-
-## Tools Available
-
-### 1. `consult_gemini`
-Start or continue a conversation with Gemini about complex coding problems.
-
-**Parameters:**
-- `session_id` (optional): Continue a previous conversation
-- `problem_description`: Description of the problem (required for new sessions)
-- `code_context`: All relevant code (required for new sessions, cached afterward)
-- `attached_files` (optional): Array of file paths to read and include in the conversation
-- `file_descriptions` (optional): Object mapping file paths to descriptions
-- `specific_question`: The question you want answered
-- `additional_context` (optional): Updates or changes since last question
-- `preferred_approach`: Type of help needed (solution/review/debug/optimize/explain/follow-up)
-
-### 2. `list_sessions`
-List all active Gemini consultation sessions.
-
-### 3. `end_session`
-End a specific session to free up memory.
-
-## Usage Examples
-
-### Starting a New Conversation (with text code)
 ```
-/consult_gemini 
-  problem_description: "I need to implement efficient caching for a React application"
-  code_context: "[paste entire relevant codebase]"
-  specific_question: "What's the best approach for implementing LRU cache with React Query?"
-  preferred_approach: "solution"
+project-c-level-claude/
+├── backend/                    # FastAPI backend application
+│   ├── app/
+│   │   ├── api/               # API routes and dependencies
+│   │   ├── core/              # Core security and utilities
+│   │   ├── models/            # Database models
+│   │   ├── services/          # Business logic services
+│   │   └── main.py           # FastAPI application
+│   ├── requirements.txt       # Python dependencies
+│   └── .env.example          # Environment configuration
+├── frontend/                  # Next.js frontend application
+│   ├── src/
+│   │   ├── components/       # React components
+│   │   ├── lib/              # API client and utilities
+│   │   ├── store/            # State management
+│   │   └── types/            # TypeScript types
+│   ├── package.json          # Node.js dependencies
+│   └── .env.example          # Environment configuration
+├── shared/                    # Shared types and utilities
+│   └── types.py              # Pydantic models
+├── database/                  # Database schema and migrations
+│   └── init.sql              # Database initialization script
+└── docs/                     # Documentation
 ```
 
-### Starting a New Conversation (with file attachments)
-```
-/consult_gemini 
-  problem_description: "I need to optimize this React component for performance"
-  attached_files: ["/absolute/path/to/src/components/Dashboard.jsx", "/absolute/path/to/src/hooks/useData.js", "/absolute/path/to/package.json"]
-  file_descriptions: {
-    "/absolute/path/to/src/components/Dashboard.jsx": "Main dashboard component with performance issues",
-    "/absolute/path/to/src/hooks/useData.js": "Custom hook for data fetching", 
-    "/absolute/path/to/package.json": "Project dependencies"
-  }
-  specific_question: "How can I improve the rendering performance of this dashboard?"
-  preferred_approach: "optimize"
-```
+## Features Implemented
 
-### Combining Both Approaches
-```
-/consult_gemini 
-  problem_description: "Complex authentication flow needs debugging"
-  code_context: "// Additional context or pseudocode here"
-  attached_files: ["/absolute/path/to/auth/login.js", "/absolute/path/to/middleware/auth.js"]
-  specific_question: "Why is the token refresh failing?"
-  preferred_approach: "debug"
-```
+### Backend Authentication System
+- **JWT-based authentication** with access and refresh tokens
+- **Password hashing** with bcrypt
+- **Email/password authentication** with validation
+- **SSO integration** with Google and LinkedIn OAuth2
+- **Token refresh mechanism** with automatic rotation
+- **Password reset functionality** with secure tokens
+- **Email verification** system
+- **User onboarding** flow
+- **Role-based access control** (Admin, CFO, CTO, Analyst)
+- **Rate limiting** and security middleware
+- **Structured logging** with correlation IDs
+- **Database models** with proper relationships
+- **API endpoints** for all authentication operations
 
-Response includes a session ID for follow-ups.
+### Frontend Authentication Integration
+- **React components** for login, register, and SSO
+- **Zustand state management** for auth state
+- **Form validation** with React Hook Form and Yup
+- **Token storage** with secure cookies
+- **API client** with automatic token refresh
+- **Error handling** with user-friendly messages
+- **Professional UI** with Tailwind CSS
+- **SSO buttons** for Google and LinkedIn
+- **Loading states** and user feedback
 
-### Follow-up Question
-```
-/consult_gemini
-  session_id: "abc123..."
-  specific_question: "I implemented your suggestion but getting stale data issues. How do I handle cache invalidation?"
-  additional_context: "Added the LRU cache as suggested, but users see old data after updates"
-  preferred_approach: "follow-up"
-```
+### Security Features
+- **JWT tokens** with short expiration times
+- **Refresh token rotation** for enhanced security
+- **Password strength requirements**
+- **Rate limiting** on authentication endpoints
+- **CORS configuration** for frontend integration
+- **Input validation** and sanitization
+- **Secure cookie handling**
+- **Environment variable management**
+- **Correlation ID tracking** for debugging
 
-### Managing Sessions
-```
-/list_sessions
-# Shows all active sessions with IDs and summaries
+## Quick Start
 
-/end_session
-  session_id: "abc123..."
-# Frees up memory for completed conversations
-```
-
-## Best Practices
-
-1. **Initial Context**: Include ALL relevant code via `code_context` or `attached_files`
-2. **File Organization**: Use `attached_files` for multiple files, `code_context` for snippets
-3. **File Descriptions**: Provide clear descriptions for each attached file
-4. **Follow-ups**: Use the session ID to continue conversations
-5. **Additional Context**: When asking follow-ups, explain what changed
-6. **Session Management**: End sessions when done to free memory and clean up files
-7. **Multiple Problems**: Use different sessions for unrelated problems
-8. **File Types**: Supports JavaScript, Python, TypeScript, JSON, and other text-based files
-
-## Testing the Server
-
-You can test the server directly before adding it to Claude Code:
+### 1. Database Setup
 
 ```bash
-# Make sure your .env file has a valid GEMINI_API_KEY
-./start_server.sh
+# Install PostgreSQL and create database
+createdb cfo_cto_helper
+
+# Run initialization script
+psql -d cfo_cto_helper -f database/init.sql
 ```
 
-The server will start and display:
+### 2. Backend Setup
+
+```bash
+cd backend
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your configuration
+
+# Run the application
+python -m app.main
 ```
-Gemini Coding Assistant MCP Server v3.0 running (Python)
-Features: Session management, file attachments, context persistence, follow-up questions
-Ready to help with complex coding problems!
+
+### 3. Frontend Setup
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env.local
+# Edit .env.local with your configuration
+
+# Run the application
+npm run dev
 ```
 
-## Context Limits
+## API Endpoints
 
-- Maximum combined input: ~50,000 characters per message
-- Maximum response: 8,192 tokens (~16,000 characters)
-- Session timeout: 1 hour of inactivity
-- Rate limiting: 1 second between requests
+### Authentication Endpoints
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/login` - User login
+- `POST /api/v1/auth/logout` - User logout
+- `POST /api/v1/auth/refresh` - Refresh access token
+- `GET /api/v1/auth/me` - Get current user info
+- `POST /api/v1/auth/verify-email` - Verify email address
+- `POST /api/v1/auth/reset-password` - Request password reset
+- `POST /api/v1/auth/reset-password/confirm` - Confirm password reset
+- `POST /api/v1/auth/change-password` - Change password
+- `POST /api/v1/auth/onboard` - Complete onboarding
+- `GET /api/v1/auth/sso/{provider}/url` - Get SSO auth URL
+- `POST /api/v1/auth/sso/callback` - Handle SSO callback
 
-## How It Works
+### User Management Endpoints
+- `GET /api/v1/users/` - List users (admin only)
+- `GET /api/v1/users/{id}` - Get user by ID
+- `PUT /api/v1/users/{id}` - Update user
+- `DELETE /api/v1/users/{id}` - Delete user (admin only)
+- `POST /api/v1/users/{id}/activate` - Activate user (admin only)
+- `POST /api/v1/users/{id}/deactivate` - Deactivate user (admin only)
+- `GET /api/v1/users/{id}/stats` - Get user statistics
 
-1. **First Message**: Creates a new session, caches code context
-2. **Follow-ups**: Reuses cached context, maintains conversation history
-3. **Session Storage**: In-memory storage (use Redis for production)
-4. **Cleanup**: Automatic expiry after 1 hour of inactivity
+## Environment Configuration
 
-## Advantages Over Stateless Design
+### Backend (.env)
+```bash
+# Database
+DATABASE_URL=postgresql://user:password@localhost:5432/cfo_cto_helper
 
-- **Efficiency**: Code context sent only once per session
-- **Context**: Gemini remembers previous questions and answers
-- **Natural Flow**: Have real conversations about complex problems
-- **Cost Savings**: Reduced token usage for follow-up questions
+# Security
+SECRET_KEY=your-super-secret-key-at-least-32-characters-long
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
 
-## Security
+# OAuth2
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+LINKEDIN_CLIENT_ID=your-linkedin-client-id
+LINKEDIN_CLIENT_SECRET=your-linkedin-client-secret
 
-- API key is never exposed
-- Rate limiting prevents abuse
-- Sessions expire automatically
-- No persistent storage of code
-- When used with Claude Code Development Kit, additional security scanning prevents sensitive data leakage
+# Email (optional)
+SMTP_SERVER=smtp.gmail.com
+SMTP_USERNAME=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+```
 
-## Version History
+### Frontend (.env.local)
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
 
-- v3.0.0: Enhanced system prompt for Claude Code Development Kit integration
-- v2.1.0: Added file attachment system with automatic cleanup
-- v2.0.0: Added session management and follow-up support  
-- v1.0.0: Initial stateless implementation
+## SSO Configuration
 
-## Connect
+### Google OAuth2
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Enable Google+ API
+4. Create OAuth2 credentials
+5. Add authorized redirect URIs: `http://localhost:3000/auth/callback`
+6. Copy client ID and secret to backend .env
 
-Feel free to connect with me on [LinkedIn](https://www.linkedin.com/in/peterkrueck/) if you have questions, need clarification, or wish to provide feedback.
+### LinkedIn OAuth2
+1. Go to [LinkedIn Developer Portal](https://developer.linkedin.com/)
+2. Create a new app
+3. Add OAuth2 redirect URLs: `http://localhost:3000/auth/callback`
+4. Copy client ID and secret to backend .env
+
+## Database Schema
+
+### Users Table
+- Basic user information and authentication data
+- Support for multiple auth providers
+- Role-based access control
+- Onboarding status tracking
+
+### Refresh Tokens Table
+- Secure token storage with expiration
+- Token rotation support
+- Revocation capabilities
+
+### Additional Tables
+- Data uploads for file management
+- Scenarios for analysis workflows
+- Analysis results for storing computations
+- Alerts for notification system
+
+## Testing
+
+### Test Users
+The database initialization script creates test users:
+- Admin: `admin@cfohelper.com` / `admin123`
+- CFO: `cfo@example.com` / `admin123`
+- CTO: `cto@example.com` / `admin123`
+
+### Authentication Flow Testing
+1. Register new user
+2. Verify email (if enabled)
+3. Complete onboarding
+4. Login with credentials
+5. Test token refresh
+6. Test password reset
+7. Test SSO login
+
+## Security Considerations
+
+- JWT tokens have short expiration times (30 minutes)
+- Refresh tokens are rotated on each use
+- Passwords are hashed with bcrypt
+- All inputs are validated and sanitized
+- Rate limiting prevents brute force attacks
+- CORS is properly configured
+- Sensitive data is not logged
+
+## Production Deployment
+
+### Backend
+- Use production database (PostgreSQL)
+- Configure proper CORS origins
+- Set up SSL/TLS certificates
+- Enable logging and monitoring
+- Configure email service
+- Set up proper secret management
+
+### Frontend
+- Build for production: `npm run build`
+- Configure API URL for production
+- Set up CDN for static assets
+- Enable monitoring and analytics
+
+## Next Steps
+
+1. **Email Service Integration**: Set up SMTP for email verification and password reset
+2. **Rate Limiting**: Implement Redis-based rate limiting
+3. **Monitoring**: Add application monitoring and alerting
+4. **Testing**: Write comprehensive unit and integration tests
+5. **Documentation**: Create API documentation with OpenAPI
+6. **CI/CD**: Set up automated deployment pipeline
+
+## License
+
+This project is licensed under the MIT License.

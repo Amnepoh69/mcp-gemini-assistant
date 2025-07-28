@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test CBR Integration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold mb-4">Test CBR Key Rate Integration</h1>
+        
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Базовый индикатор
+            </label>
+            <select id="baseRateIndicator" class="w-full p-2 border rounded-md">
+                <option value="FIXED">Фиксированная ставка</option>
+                <option value="KEY_RATE">Ключевая ставка ЦБ РФ</option>
+                <option value="LIBOR">LIBOR</option>
+            </select>
+        </div>
+
+        <div id="keyRatePanel" class="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200 hidden">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-medium text-blue-800">Ключевая ставка ЦБ РФ</h3>
+                <button id="refreshBtn" class="text-blue-600 hover:text-blue-700 text-sm">
+                    Обновить
+                </button>
+            </div>
+            <div id="keyRateInfo" class="text-sm text-blue-700">
+                Нажмите "Обновить" для загрузки актуальной ставки
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Базовая ставка (%)
+            </label>
+            <input id="baseRateValue" type="number" step="0.01" class="w-full p-2 border rounded-md" placeholder="16.00">
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Кредитный спред (%)
+            </label>
+            <input id="creditSpread" type="number" step="0.01" class="w-full p-2 border rounded-md" placeholder="3.50">
+        </div>
+
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">
+                Итоговая ставка (%)
+            </label>
+            <input id="totalRate" type="number" step="0.01" class="w-full p-2 border rounded-md bg-gray-50" readonly>
+        </div>
+
+        <div id="message" class="text-sm text-green-600 hidden"></div>
+    </div>
+
+    <script>
+        const baseRateIndicator = document.getElementById('baseRateIndicator');
+        const keyRatePanel = document.getElementById('keyRatePanel');
+        const keyRateInfo = document.getElementById('keyRateInfo');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const baseRateValue = document.getElementById('baseRateValue');
+        const creditSpread = document.getElementById('creditSpread');
+        const totalRate = document.getElementById('totalRate');
+        const message = document.getElementById('message');
+
+        // Show/hide key rate panel
+        baseRateIndicator.addEventListener('change', function() {
+            if (this.value === 'KEY_RATE') {
+                keyRatePanel.classList.remove('hidden');
+                loadKeyRate();
+            } else {
+                keyRatePanel.classList.add('hidden');
+            }
+        });
+
+        // Load key rate from API
+        async function loadKeyRate() {
+            try {
+                keyRateInfo.textContent = 'Загрузка ключевой ставки...';
+                
+                const response = await fetch('http://localhost:8001/api/v1/cbr/key-rate/current');
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const rate = data.rate;
+                    keyRateInfo.innerHTML = `<strong>Текущая ставка:</strong> ${rate}%<br><span class="text-xs text-blue-600">Загружено из данных ЦБ РФ</span>`;
+                    
+                    // Auto-fill base rate if empty
+                    if (!baseRateValue.value || baseRateValue.value === '0') {
+                        baseRateValue.value = rate;
+                        showMessage(`Загружена текущая ключевая ставка ЦБ РФ: ${rate}%`);
+                    }
+                    
+                    calculateTotalRate();
+                } else {
+                    keyRateInfo.textContent = 'Ошибка загрузки ключевой ставки';
+                }
+            } catch (error) {
+                console.error('Error loading key rate:', error);
+                keyRateInfo.textContent = 'Ошибка подключения к API';
+            }
+        }
+
+        // Calculate total rate
+        function calculateTotalRate() {
+            const base = parseFloat(baseRateValue.value) || 0;
+            const spread = parseFloat(creditSpread.value) || 0;
+            totalRate.value = (base + spread).toFixed(2);
+        }
+
+        // Show message
+        function showMessage(text) {
+            message.textContent = text;
+            message.classList.remove('hidden');
+            setTimeout(() => {
+                message.classList.add('hidden');
+            }, 3000);
+        }
+
+        // Event listeners
+        refreshBtn.addEventListener('click', loadKeyRate);
+        baseRateValue.addEventListener('input', calculateTotalRate);
+        creditSpread.addEventListener('input', calculateTotalRate);
+
+        // Initial calculation
+        calculateTotalRate();
+    </script>
+</body>
+</html>
